@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 
 	goflags "github.com/jessevdk/go-flags"
 
@@ -40,6 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	keys := []string{}
 	deps := map[string][]string{}
 	for i, goModPath := range goPaths {
 		requires, err := goModParse(goModPath)
@@ -50,13 +52,16 @@ func main() {
 		for k, v := range requires {
 			if _, ok := deps[k]; !ok {
 				deps[k] = make([]string, numPaths)
+				keys = append(keys, k)
 			}
 			deps[k][i] = v
 		}
 	}
+	sort.Strings(keys)
 
 	exitCode := 0
-	for depPath, vals := range deps {
+	for _, depPath := range keys {
+		vals := deps[depPath]
 		ok := true
 		expectedVal := ""
 		for _, val := range vals {
